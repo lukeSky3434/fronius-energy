@@ -1,9 +1,8 @@
 # fronius-energy
 
+Access PV live logs using the Fronius Solar API V1.
 
-java programm which reads the current power production of the fronius symo inverter.
-
-It also reads the daily energy productions.
+Java programm which reads the current power production of the fronius symo inverter. It also reads the daily energy productions.
 
 
 Docker image is available here: [Image](https://hub.docker.com/repository/docker/pendl2/fronius-reader)

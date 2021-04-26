@@ -23,25 +23,30 @@ import org.json.JSONObject;
 public class RealTimeDataReader implements Runnable
 {
 	private static final String PATH = "solar_api/v1/GetInverterRealtimeData.cgi";
-	private static final String HOST = "192.168.8.101";
+	private static final String HOST = "FRONIUS.HOST";
 	private final Client client;
 	private final WebTarget webTarget;
   private static final Logger LOG = LogManager.getLogger(RealTimeDataReader.class);
 
 	public RealTimeDataReader()
 	{
+		Configurator.initialize(new DefaultConfiguration());
+		Configurator.setRootLevel(Level.DEBUG);
+
 		client = ClientBuilder.newClient();
-		URI host = UriBuilder.fromUri("http://" + HOST + "/").build();
+		String host = System.getenv(HOST);
+		if(host == null || host.isEmpty()) {
+				host = "192.168.8.101";
+		}
+		LOG.info("host is set to <{}>", host);
+		URI hostUri = UriBuilder.fromUri("http://" + host + "/").build();
 
 		webTarget = client
-			.target(UriBuilder.fromUri(host)
+			.target(UriBuilder.fromUri(hostUri)
 				.path(PATH)
 				.queryParam("Scope", "System")
 				.queryParam("DataCollection", "CumulationInverterData")
 				.build());
-
-		Configurator.initialize(new DefaultConfiguration());
-		Configurator.setRootLevel(Level.DEBUG);
 	}
 
 

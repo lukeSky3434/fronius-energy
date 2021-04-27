@@ -2,7 +2,7 @@
 
 Access PV live logs using the Fronius Solar API V1.
 
-Java programm which reads the current power production of the fronius symo inverter. It also reads the daily energy productions.
+Java programm which reads the current power production of the fronius symo inverter. It also reads and logs the daily energy productions.
 
 If the production is over the POWER.THRESHOLD value, it switches on the component Shelly PLUG-S - if it goes down under the threshold, it switches the component off.
 

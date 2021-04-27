@@ -1,8 +1,11 @@
 package luke.sky.fronius.energy.reader;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -23,22 +26,56 @@ import org.json.JSONObject;
 public class RealTimeDataReader implements Runnable
 {
 	private static final String PATH = "solar_api/v1/GetInverterRealtimeData.cgi";
-	private static final String HOST = "FRONIUS.HOST";
+	private static final String SHELLY_PATH = "relay/0";
+	private static final String ENV_HOST = "FRONIUS.HOST";
+	private static final String ENV_SHELLY_HOST = "SHELLY.PLUGS";
+	private static final String ENV_THRESHOLD = "POWER.THRESHOLD";
+	private static final String ENV_LOG_LEVEL = "LOG.LEVEL";
+
+	private String host;
+	private String shellyHost;
+	private Long powerThreshold;
+
 	private final Client client;
 	private final WebTarget webTarget;
-  private static final Logger LOG = LogManager.getLogger(RealTimeDataReader.class);
+	private static final Logger LOG = LogManager.getLogger(RealTimeDataReader.class);
+
+	private void initalizeConfiguration()
+	{
+		host = System.getenv(ENV_HOST);
+		if (host == null || host.isEmpty()) {
+			host = "fronius";
+		}
+
+		shellyHost = System.getenv(ENV_SHELLY_HOST);
+		if (shellyHost == null || shellyHost.isEmpty()) {
+			shellyHost = "shelly-plug-s-1";
+		}
+
+		try {
+			powerThreshold = Long.parseLong(System.getenv(ENV_THRESHOLD));
+		}
+		catch (NumberFormatException x) {
+			LOG.warn("<{}> is not a number, taking default value 3500", System.getenv(ENV_THRESHOLD));
+		}
+		if (powerThreshold == null) {
+			powerThreshold = 3500L;
+		}
+
+		LOG.info("fronius host is set to <{}>, shelly plug-s host is set to <{}>, threshold is set to <{}> watt", host, shellyHost, powerThreshold);
+	}
 
 	public RealTimeDataReader()
 	{
 		Configurator.initialize(new DefaultConfiguration());
-		Configurator.setRootLevel(Level.DEBUG);
+		String level = System.getenv(ENV_LOG_LEVEL);
+		Level ll = Level.getLevel(level == null ? Level.INFO.name() : level);
+		Configurator.setRootLevel(ll);
 
 		client = ClientBuilder.newClient();
-		String host = System.getenv(HOST);
-		if(host == null || host.isEmpty()) {
-				host = "192.168.8.101";
-		}
-		LOG.info("host is set to <{}>", host);
+
+		initalizeConfiguration();
+
 		URI hostUri = UriBuilder.fromUri("http://" + host + "/").build();
 
 		webTarget = client
@@ -49,6 +86,67 @@ public class RealTimeDataReader implements Runnable
 				.build());
 	}
 
+	private boolean isShellyOn() throws ProcessingException
+	{
+		URI shellyUri = UriBuilder.fromUri("http://" + shellyHost + "/").build();
+		WebTarget wt = client
+			.target(UriBuilder.fromUri(shellyUri)
+				.path(SHELLY_PATH)
+				.build());
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("request => {}", wt.getUri());
+		}
+
+		Response response = wt.request().get();
+		String entity = response.readEntity(String.class);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("response => {}", entity);
+		}
+
+		JSONObject obj = new JSONObject(entity);
+		return obj.getBoolean("ison");
+	}
+
+	private void switchShelly(final boolean on) throws ProcessingException
+	{
+		boolean state = isShellyOn();
+
+		if (state != on) {
+			URI shellyUri = UriBuilder.fromUri("http://" + shellyHost + "/").build();
+			final String action = on ? "on" : "off";
+			WebTarget wt = client
+				.target(UriBuilder.fromUri(shellyUri)
+					.path(SHELLY_PATH)
+					.queryParam("turn", action)
+					.build());
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("request => {}", wt.getUri());
+			}
+
+			Response r = wt.request().get();
+
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("response => {}", r.readEntity(String.class));
+			}
+
+			if (r.getStatus() == 200) {
+				LOG.info("switched shelly {} successfully", action);
+			}
+			else {
+				LOG.info("switched shelly {} failed; {}", action, r);
+
+			}
+		}
+		else {
+			if (LOG.isDebugEnabled()) {
+				LOG.info("nothing todo, because current state of shelly is <{}>", state ? "on" : "off");
+			}
+		}
+	}
 
 	public static void main(String[] args) throws Exception
 	{
@@ -84,7 +182,24 @@ public class RealTimeDataReader implements Runnable
 				JSONObject pac = obj.getJSONObject("Body").getJSONObject("Data").getJSONObject("PAC");
 
 				try {
-					LOG.info(parseData(pac, "PAC"));
+					List<RealTimeData> current = parseData(pac, "PAC");
+					LOG.info(current);
+
+					final AtomicLong currentProducedPower = new AtomicLong();
+					current.forEach(x -> currentProducedPower.addAndGet(x.value));
+
+					try {
+						if (currentProducedPower.get() > powerThreshold) {
+							switchShelly(true);
+						}
+						else {
+							switchShelly(false);
+						}
+					}
+					catch (ProcessingException x) {
+						LOG.error("error while interacting with the shelly component", x);
+					}
+
 					JSONObject dEnergy = obj.getJSONObject("Body").getJSONObject("Data").getJSONObject("DAY_ENERGY");
 					LOG.info(parseData(dEnergy, "DAY_ENERGY"));
 				}

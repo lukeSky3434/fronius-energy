@@ -9,9 +9,12 @@ Docker image is available here: [Image](https://hub.docker.com/repository/docker
 
 You can run the docker image with `docker run pendl2/fronius-reader`
 
-Docker Environment Variable | Description 
------------- | -------------
-FRONIUS.HOST | The host where, the Fronius API is running 
+Docker Environment Variable | Default | Description 
+------------ | ------------- | ------------- 
+FRONIUS.HOST | fronius | The host where, the Fronius API is running 
+SHELLY.PLUGS | shelly-plug-s-1 | The Shelly PlugS host address 
+POWER.THRESHOLD | 3500 | Long value in Watt. If threshold is reached, it activates the Shelly Plug-S component
+LOG.LEVEL | INFO | Log Level, can be switched to debug, for detailed information
 
 Example:
 setting the host 0.0.0.0 via environment: `sudo docker run -e FRONIUS.HOST=0.0.0.0 pendl2/fronius-reader`

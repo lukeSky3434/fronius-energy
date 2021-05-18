@@ -4,11 +4,11 @@ Access PV live logs using the Fronius Solar API V1 and sends the values to a inf
 
 # Description 
 
-Java programm which reads the current power production of the fronius symo inverter. It sends the read values to a influx db (it uses the API v2, which is compatible with Influxdb2 and Influxdb 1.x).
+Java programm which reads the current power production of the fronius symo inverter. It sends the values to an influx db (the influx API v2 is used, which is compatible with Influxdb2 and Influxdb 1.x).
 
 ## Features 
 
-If the production is over the POWER.THRESHOLD value, it switches on the component Shelly PLUG-S - if it goes down under the threshold, it switches the component off.
+Via Environment Variable (SHELLY.PLUGS.MANAGING) you can activate the management of shelly relays, to switch on or off e.g. the Shelly PLUG-S component. If the flag is active and the production is over the POWER.THRESHOLD value, it switches on the relay - if it goes down under the threshold, it switches the component off.
 
 ![Fonius Inverter](symo.jpg)
 
@@ -16,16 +16,18 @@ If the production is over the POWER.THRESHOLD value, it switches on the componen
 
 ## Docker Image 
 
-Docker image is available here: [Image](https://hub.docker.com/repository/docker/pendl2/fronius-reader)
+You can find the Docker image on [Docker Hub](https://hub.docker.com/repository/docker/pendl2/fronius-reader)
 
-You can run the docker image with `docker run pendl2/fronius-reader`
+If you want to run a container, you can use the command `docker run pendl2/fronius-reader`
 
-There are tags for common processor architectures:
+There are different tags available for common processor architectures:
 * latest
 * the project-version itself
 
-for ARM architectures:
+If you have an ARM architecture, there is the following tag available:
 * the project-version itself and the suffix `-arm7`
+
+## Configuration 
 
 Docker Environment Variable | Default | Description
 ------------ | ------------- | -------------

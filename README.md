@@ -47,12 +47,12 @@ setting the host 0.0.0.0 via environment: `sudo docker run -e FRONIUS.HOST=0.0.0
 
 ## Multi-Container Configuration 
 
-If you want to use a multi-container configuration (ARM Architecture), which contains containers for
-* influx
-* grafana
-* fronius energy consumption (this project)
+I created a multi-container configuration, which contains:
+* InfluxDb
+* Grafana
+* Fronius Energy Consumption (this project)
 
-you can switch to this respository: [Multi Container Project](https://github.com/lukeSky3434/multi-container-arm)
+You can find the details in the following repo: [Multi Container Project](https://github.com/lukeSky3434/multi-container-arm)
 
 # Open Points:
 

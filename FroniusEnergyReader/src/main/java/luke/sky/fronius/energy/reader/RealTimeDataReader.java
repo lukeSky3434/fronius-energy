@@ -1,6 +1,5 @@
 package luke.sky.fronius.energy.reader;
 
-import java.net.ConnectException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +30,12 @@ public class RealTimeDataReader implements Runnable
 	private static final String ENV_SHELLY_HOST = "SHELLY.PLUGS";
 	private static final String ENV_THRESHOLD = "POWER.THRESHOLD";
 	private static final String ENV_LOG_LEVEL = "LOG.LEVEL";
+	private static final String ENV_SHELLY_MANAGER = "SHELLY.PLUGS.MANAGING";
 
 	private String host;
 	private String shellyHost;
 	private Long powerThreshold;
+	private boolean shellyManaging;
 
 	private final Client client;
 	private final WebTarget webTarget;
@@ -45,6 +46,14 @@ public class RealTimeDataReader implements Runnable
 		host = System.getenv(ENV_HOST);
 		if (host == null || host.isEmpty()) {
 			host = "fronius";
+		}
+
+		String tmp = System.getenv(ENV_SHELLY_MANAGER);
+		if (tmp == null || tmp.isEmpty()) {
+			shellyManaging = false;
+		}
+		else {
+			shellyManaging = "true".equalsIgnoreCase(tmp);
 		}
 
 		shellyHost = System.getenv(ENV_SHELLY_HOST);
@@ -126,19 +135,17 @@ public class RealTimeDataReader implements Runnable
 				LOG.debug("request => {}", wt.getUri());
 			}
 
-			Response r = wt.request().get();
+			try (Response r = wt.request().get();) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("response => {}", r.readEntity(String.class));
+				}
 
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("response => {}", r.readEntity(String.class));
-			}
-
-			if (r.getStatus() == 200) {
-				LOG.info("switched shelly {} successfully", action);
-			}
-			else {
-				LOG.info("switched shelly {} failed; {}", action, r);
-
+				if (r.getStatus() == 200) {
+					LOG.info("switched shelly {} successfully", action);
+				}
+				else {
+					LOG.info("switched shelly {} failed; {}", action, r);
+				}
 			}
 		}
 		else {
@@ -173,7 +180,10 @@ public class RealTimeDataReader implements Runnable
 	@Override
 	public void run()
 	{
+		DbAdapter dbAdpater = new InfluxAdapter();
+
 		while (true) {
+			LOG.info("doing webservice call - uri <" + webTarget.getUri() + ">");
 			try (Response response = webTarget
 				.request()
 				.get()) {
@@ -186,26 +196,43 @@ public class RealTimeDataReader implements Runnable
 					LOG.info(current);
 
 					final AtomicLong currentProducedPower = new AtomicLong();
-					current.forEach(x -> currentProducedPower.addAndGet(x.value));
+					current.forEach(x -> {
+						currentProducedPower.addAndGet(x.value);
+						dbAdpater.sendMeasurement("energy_production_current", x.name.toLowerCase(), x.value, x.unit, "fronius_symo_" + x.device,
+							"home");
+					});
 
 					try {
 						if (currentProducedPower.get() > powerThreshold) {
-							switchShelly(true);
+							if (shellyManaging) {
+								switchShelly(true);
+							}
 						}
 						else {
-							switchShelly(false);
+							if (shellyManaging) {
+								switchShelly(false);
+							}
 						}
 					}
-					catch (ProcessingException x) {
+					catch (Exception x) {
 						LOG.error("error while interacting with the shelly component", x);
 					}
 
+
 					JSONObject dEnergy = obj.getJSONObject("Body").getJSONObject("Data").getJSONObject("DAY_ENERGY");
-					LOG.info(parseData(dEnergy, "DAY_ENERGY"));
+					List<RealTimeData> data = parseData(dEnergy, "DAY_ENERGY");
+
+					data.forEach(x -> {
+						LOG.info(x);
+						dbAdpater.sendMeasurement("energy_production", x.name.toLowerCase(), x.value, x.unit, "fronius_symo_" + x.device, "home");
+					});
 				}
 				catch (JSONException x) {
-					LOG.error(x);
+					LOG.error("error while parsing data", x);
 				}
+			}
+			catch (Exception x) {
+				LOG.error("error while processing data", x);
 			}
 			try {
 				LOG.info("sleep 10 seconds ...");

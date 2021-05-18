@@ -50,7 +50,7 @@ If you want to use a multi-container configuration (ARM Architecture), which con
 * grafana
 * fronius energy consumption (this project)
 
-you can switch to this respository: (Multi Container Project)[https://github.com/lukeSky3434/multi-container-arm]
+you can switch to this respository: [Multi Container Project](https://github.com/lukeSky3434/multi-container-arm)
 
 # Open Points:
 

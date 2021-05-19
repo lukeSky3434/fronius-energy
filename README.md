@@ -1,6 +1,6 @@
 # Fronius Energy Consumption
 
-Access PV live logs using the Fronius Solar API V1 and sends the values to a influx db.
+Access PV live logs using the Fronius Solar API V1 and sends the values to an influx db.
 
 # Description 
 

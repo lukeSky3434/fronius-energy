@@ -2,11 +2,11 @@
 
 Access PV live logs using the Fronius Solar API V1 and sends the values to an influx db.
 
-# Description 
+# Description
 
 Java programm which reads the current power production of the fronius symo inverter. It sends the values to an influx db (the influx API v2 is used, which is compatible with Influxdb2 and Influxdb 1.x).
 
-## Features 
+## Features
 
 Via Environment Variable (SHELLY.PLUGS.MANAGING) you can activate the management of shelly relays, to switch on or off e.g. the Shelly PLUG-S component. If the flag is active and the production is over the POWER.THRESHOLD value, it switches on the relay - if it goes down under the threshold, it switches the component off.
 
@@ -14,7 +14,7 @@ Via Environment Variable (SHELLY.PLUGS.MANAGING) you can activate the management
 
 ![Shelly Plug-S](shelly-plug-s.jpg)
 
-## Docker Image 
+## Docker Image
 
 You can find the Docker image on [Docker Hub](https://hub.docker.com/repository/docker/pendl2/fronius-reader)
 
@@ -24,10 +24,7 @@ There are different tags available for common processor architectures:
 * latest
 * the project-version itself
 
-If you have an ARM architecture, there is the following tag available:
-* the project-version itself and the suffix `-arm7`
-
-## Configuration 
+## Configuration
 
 Docker Environment Variable | Default | Description
 ------------ | ------------- | -------------
@@ -40,12 +37,12 @@ INFLUXDB.HOST | localhost | The host where the influx service is running
 INFLUXDB.PORT | 8086 | The port where the service is running
 INFLUXDB.BUCKET | home  | The bucket
 INFLUXDB.ORG | pendulum | The organisation which is sent to the InfluxDB
-INFLUXDB.USER.TOKEN | | If set the token will be added to the request, if not, no authentication is used
+INFLUXDB.USER.TOKEN | | If this environment is set, the token will be added to the request, if not, no authentication is used
 
 Example:
 setting the host 0.0.0.0 via environment: `sudo docker run -e FRONIUS.HOST=0.0.0.0 pendl2/fronius-reader`
 
-## Multi-Container Configuration 
+## Multi-Container Configuration
 
 I created a multi-container configuration, which contains:
 * InfluxDb

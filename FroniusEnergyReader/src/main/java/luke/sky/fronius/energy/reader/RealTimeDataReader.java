@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.DefaultConfiguration;
+import org.glassfish.jersey.client.ClientProperties;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -82,8 +83,12 @@ public class RealTimeDataReader implements Runnable
 		Configurator.setRootLevel(ll);
 
 		client = ClientBuilder.newClient();
+    client.property(ClientProperties.CONNECT_TIMEOUT, 2000);
+    client.property(ClientProperties.READ_TIMEOUT,    2000);
 
 		initalizeConfiguration();
+
+		LOG.info("initialization done");
 
 		URI hostUri = UriBuilder.fromUri("http://" + host + "/").build();
 
@@ -107,15 +112,16 @@ public class RealTimeDataReader implements Runnable
 			LOG.debug("request => {}", wt.getUri());
 		}
 
-		Response response = wt.request().get();
-		String entity = response.readEntity(String.class);
+		try (Response response = wt.request().get()) {
+				String entity = response.readEntity(String.class);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("response => {}", entity);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("response => {}", entity);
+				}
+
+				JSONObject obj = new JSONObject(entity);
+				return obj.getBoolean("ison");
 		}
-
-		JSONObject obj = new JSONObject(entity);
-		return obj.getBoolean("ison");
 	}
 
 	private void switchShelly(final boolean on) throws ProcessingException
@@ -157,9 +163,15 @@ public class RealTimeDataReader implements Runnable
 
 	public static void main(String[] args) throws Exception
 	{
-		Thread th = new Thread(new RealTimeDataReader());
-		th.setName("ReaderThread");
-		th.start();
+			try {
+				Thread th = new Thread(new RealTimeDataReader());
+				th.setName("ReaderThread");
+				th.start();
+			}
+			catch(Exception x) {
+					LOG.error("caught exception", x);
+					throw x;
+				}
 	}
 
 	private static List<RealTimeData> parseData(JSONObject obj, final String name)
@@ -221,7 +233,6 @@ public class RealTimeDataReader implements Runnable
 
 					JSONObject dEnergy = obj.getJSONObject("Body").getJSONObject("Data").getJSONObject("DAY_ENERGY");
 					List<RealTimeData> data = parseData(dEnergy, "DAY_ENERGY");
-
 					data.forEach(x -> {
 						LOG.info(x);
 						dbAdpater.sendMeasurement("energy_production", x.name.toLowerCase(), x.value, x.unit, "fronius_symo_" + x.device, "home");

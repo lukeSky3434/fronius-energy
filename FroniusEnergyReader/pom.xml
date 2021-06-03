@@ -60,14 +60,24 @@
             <id>package_image</id>
             <phase>package</phase>
             <goals>
-              <goal>buildTar</goal>
+              <!--<goal>buildTar</goal>-->
               <goal>build</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <from>
-            <image>registry://gcr.io/distroless/java@sha256:e99eb6cf88ca2df69e99bf853d65f125066730e3e9f7a233bd1b7e3523c144cb</image>
+            <image>pendl2/openjdk:11</image>
+            <platforms>
+              <platform>
+                <architecture>amd64</architecture>
+                <os>linux</os>
+              </platform>
+              <platform>
+                <architecture>arm</architecture>
+                <os>linux</os>
+              </platform>
+            </platforms>
           </from>
           <to>
             <image>${docker.registry.url}</image>
@@ -81,38 +91,7 @@
           <containerizingMode>exploded</containerizingMode>
           <allowInsecureRegistries>true</allowInsecureRegistries>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.google.cloud.tools</groupId>
-        <artifactId>jib-maven-plugin</artifactId>
-        <version>3.0.0</version>
-        <executions>
-          <execution>
-            <id>package_image</id>
-            <phase>package</phase>
-            <goals>
-              <goal>buildTar</goal>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <from>
-            <image>arm32v7/openjdk:11-slim</image>
-          </from>
-          <to>
-            <image>${docker.registry.url}</image>
-            <tags>
-              <tag>${project.version}-arm7</tag>
-            </tags>
-          </to>
-          <container>
-            <mainClass>luke.sky.fronius.energy.reader.RealTimeDataReader</mainClass>
-          </container>
-          <containerizingMode>exploded</containerizingMode>
-          <allowInsecureRegistries>true</allowInsecureRegistries>
-        </configuration>
-      </plugin>
+      </plugin> 
     </plugins>
   </build>
 </project>

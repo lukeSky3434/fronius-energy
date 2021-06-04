@@ -4,11 +4,11 @@
   <groupId>com.mycompany</groupId>
   <artifactId>FroniusEnergyReader</artifactId>
   <name>Fronius Energy Consumption</name>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
   <scm>
     <developerConnection>scm:git:https://github.com/lukeSky3434/fronius-energy.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>FroniusEnergyReader-1.0.0</tag>
   </scm>
   <distributionManagement>
     <repository>

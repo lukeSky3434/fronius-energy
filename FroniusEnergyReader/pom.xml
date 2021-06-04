@@ -6,11 +6,22 @@
   <name>Fronius Energy Consumption</name>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
+  <scm>
+    <developerConnection>scm:git:https://github.com/lukeSky3434/fronius-energy.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  <distributionManagement>
+    <repository>
+      <id>maven-repository</id>
+      <url>${github.maven.repository}</url>
+    </repository>
+  </distributionManagement>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <docker.registry.url>registry.hub.docker.com/pendl2/fronius-reader</docker.registry.url>
+    <github.maven.repository>file:///tmp/repository/maven-repository/</github.maven.repository>
   </properties>
   <dependencies>
     <dependency>
@@ -91,7 +102,12 @@
           <containerizingMode>exploded</containerizingMode>
           <allowInsecureRegistries>true</allowInsecureRegistries>
         </configuration>
-      </plugin> 
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>3.0.0-M4</version>
+      </plugin>
     </plugins>
   </build>
 </project>

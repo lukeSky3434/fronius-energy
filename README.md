@@ -51,6 +51,10 @@ I created a multi-container configuration, which contains:
 
 You can find the details in the following repo: [Multi Container Project](https://github.com/lukeSky3434/multi-container-arm)
 
+You can easily define dashboards with grafana, here is an example of my dashboard:
+
+![Grafana PV Dashboard](dashboard.jpg)
+
 # Open Points:
 
 * Integrate the Shelly 3em energy meter

@@ -53,7 +53,7 @@ You can find the details in the following repo: [Multi Container Project](https:
 
 You can easily define dashboards with grafana, here is an example of my dashboard:
 
-![Grafana PV Dashboard](dashboard.jpg)
+![Grafana PV Dashboard](dashboard.png)
 
 # Open Points:
 

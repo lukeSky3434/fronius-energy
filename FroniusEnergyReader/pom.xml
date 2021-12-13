@@ -7,7 +7,7 @@
   <version>1.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <scm>
-    <developerConnection>scm:git:https://github.com/lukeSky3434/fronius-energy.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com/lukeSky3434/fronius-energy.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
   <distributionManagement>
